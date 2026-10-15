@@ -82,6 +82,8 @@ mod tests {
         let (jr, ja) = jra(0.5, 1.5)?;
         assert_approx_eq!(0.2288, jr);
         assert_approx_eq!(0.2782, ja);
+        let (jr, ja) = jra(1.0, 1.5)?;
+        println!("{}, {}", jr, ja);
         Ok(())
     }
 

@@ -1,4 +1,5 @@
 pub mod common;
+pub mod core;
 pub struct Input {}
 
 pub fn add(left: u64, right: u64) -> u64 {
