@@ -1,15 +1,9 @@
 pub mod common;
-pub struct Input {
-
-}
-
+pub struct Input {}
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
-
-
-
 
 #[cfg(test)]
 mod tests {
