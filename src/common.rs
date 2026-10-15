@@ -54,36 +54,44 @@ pub fn hertz_coefficients(f_rho: f64) -> anyhow::Result<(f64, f64, f64, f64, f64
 }
 
 #[cfg(test)]
-fn approx_eq(a: f64, b: f64, eps: f64) -> bool {
-    (a - b).abs() < eps
-}
-
-#[cfg(test)]
 mod tests {
     use super::*;
-
+    macro_rules! assert_approx_eq {
+        ($a:expr, $b:expr) => {
+            assert_approx_eq!($a, $b, 1e-3);
+        };
+        ($a:expr, $b:expr, $eps:expr) => {{
+            let a = $a;
+            let b = $b;
+            let eps:f64 = $eps;
+            let diff = (a - b).abs();
+            let threshold = eps.max(eps * a.abs().max(b.abs()));
+            assert!(
+                diff < threshold,
+                "assert_approx_eq failed:\n  a = {a:.15}\n  b = {b:.15}\n  |a-b| = {diff:.15}\n  threshold = {threshold:.15}"
+            );
+        }};
+    }
     #[test]
     fn test_jra_0_5() -> anyhow::Result<()> {
-        let eps = 1e-3;
         // roller
         let (jr, ja) = jra(0.5, 1.1)?;
-        assert!(approx_eq(0.2453, jr, eps));
-        assert!(approx_eq(0.3090, ja, eps));
+        assert_approx_eq!(0.2453, jr);
+        assert_approx_eq!(0.3090, ja);
         // ball
         let (jr, ja) = jra(0.5, 1.5)?;
-        assert!(approx_eq(0.2288, jr, eps));
-        assert!(approx_eq(0.2782, ja, eps));
+        assert_approx_eq!(0.2288, jr);
+        assert_approx_eq!(0.2782, ja);
         Ok(())
     }
 
     #[test]
     fn test_hertz() -> anyhow::Result<()> {
-        let eps = 1e-3;
         let (a_star, b_star, delta_star, e, _) = hertz_coefficients(0.5)?;
-        assert!(approx_eq(a_star, 1.4858, eps));
-        assert!(approx_eq(b_star, 0.7169, eps));
-        assert!(approx_eq(delta_star, 0.9376, eps));
-        assert!(approx_eq(e, 0.8755, eps));
+        assert_approx_eq!(a_star, 1.4858);
+        assert_approx_eq!(b_star, 0.7169);
+        assert_approx_eq!(delta_star, 0.9376);
+        assert_approx_eq!(e, 0.8755);
         Ok(())
     }
 
