@@ -19,7 +19,7 @@ pub fn fcr(a1: f64, lambda: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result
         "计算错误: 外圈曲率系数 fe 不能为零"
     );
     ensure!(
-        gamma >= 0.0 && gamma < 1.0,
+        (0.0..1.0).contains(&gamma),
         "计算错误: 几何比 gamma 超出有效范围 [0, 1) (实际值: {})",
         gamma
     );

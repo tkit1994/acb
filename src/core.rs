@@ -77,7 +77,7 @@ pub fn load_distribution(
 pub fn calc_sigma(q: f64, a_star: f64, b_star: f64, sigma_rho: f64) -> anyhow::Result<f64> {
     if q.abs() < 1e-3 {
         return Ok(0.0);
-    } 
+    }
     let term = (q / sigma_rho).powf(1.0 / 3.0);
     let a = 0.0236 * a_star * term;
     let b = 0.0236 * b_star * term;
