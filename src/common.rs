@@ -36,8 +36,8 @@ pub fn jra(epsilon: f64, n: f64) -> anyhow::Result<(f64, f64)> {
 // let (a_star, b_star, delta_star, e, kappa) = hertz_coff(f_rho)
 #[allow(non_snake_case)]
 pub fn hertz_coefficients(f_rho: f64) -> anyhow::Result<(f64, f64, f64, f64, f64)> {
-    let lo = 1e-5;
-    let hi = 1.0 - 1e-5;
+    let lo = 1e-6;
+    let hi = 1.0 - 1e-6;
 
     let helper = |e: f64| -> f64 {
         let m = e.powf(2.0);
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn print_hertz_coefficients() -> anyhow::Result<()> {
+    fn test_print_hertz_coefficients() -> anyhow::Result<()> {
         let mut f_rho = 0.05;
         let step = 0.05;
         println!(
