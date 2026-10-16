@@ -56,7 +56,7 @@ pub fn hertz_coefficients(f_rho: f64) -> anyhow::Result<(f64, f64, f64, f64, f64
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::macros::assert_approx_eq;
+    use crate::assert_approx_eq;
     #[test]
     fn test_jra_0_5() -> anyhow::Result<()> {
         // roller
@@ -67,8 +67,6 @@ mod tests {
         let (jr, ja) = jra(0.5, 1.5)?;
         assert_approx_eq!(0.2288, jr);
         assert_approx_eq!(0.2782, ja);
-        let (jr, ja) = jra(1.0, 1.5)?;
-        println!("{}, {}", jr, ja);
         Ok(())
     }
 

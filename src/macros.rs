@@ -1,4 +1,4 @@
-
+#[macro_export]
 macro_rules! assert_approx_eq {
         ($a:expr, $b:expr) => {
             assert_approx_eq!($a, $b, 1e-3);
@@ -15,4 +15,3 @@ macro_rules! assert_approx_eq {
             );
         }};
     }
-pub(crate) use assert_approx_eq;
