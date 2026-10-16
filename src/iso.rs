@@ -73,6 +73,9 @@ mod tests {
         gamma = 0.1;
         let fc = fcr(a1, lambda, fi, fe, gamma)?;
         assert_approx_eq!(fc, 55.5, eps);
+        gamma = 0.01;
+        let fc = fcr(a1, lambda, fi, fe, gamma)?;
+        assert_approx_eq!(fc, 29.1, eps);
         Ok(())
     }
 }
