@@ -1,7 +1,10 @@
 use anyhow::ensure;
 use scirs2::special::elliptic_ext::ellipe_agm;
 
-use crate::{common::hertz_coefficients, core::calc_sum_rho_f_rho_i};
+use crate::{
+    common::hertz_coefficients,
+    core::{calc_sum_rho_f_rho_i, calc_sum_rho_f_rho_o},
+};
 
 // ISO 281 径向额定中载荷系数计算
 pub fn fcr(a1: f64, lambda: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result<f64> {
@@ -59,7 +62,7 @@ pub fn f0r(gamma: f64, fi: f64, fe: f64, sigma_max: f64) -> anyhow::Result<f64> 
 
     // 外圈
 
-    let (_, f_rho_e) = calc_sum_rho_f_rho_i(gamma, 1.0, fe)?;
+    let (_, f_rho_e) = calc_sum_rho_f_rho_o(gamma, 1.0, fe)?;
     let (_, _, _, e_e, kappa_e) = hertz_coefficients(f_rho_e)?;
     let m_e = e_e.powf(2.0);
     let numerator_term2e = ellipe_agm(m_e)?;
