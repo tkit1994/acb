@@ -101,13 +101,6 @@ pub fn calc_sum_rho_f_rho_o(gamma: f64, d: f64, fo: f64) -> anyhow::Result<(f64,
     Ok((sum_rho, f_rho))
 }
 
-pub fn deg2rad(alpha: f64) -> f64 {
-    alpha * PI / 180.0
-}
-
-pub fn rad2deg(alpha: f64) -> f64 {
-    alpha * 180.0 / PI
-}
 // 计算载荷分布-完整代码
 pub fn calc_dist_all(acb_input: ACBInput) -> anyhow::Result<LoadResult> {
     let fr = acb_input.fr;
@@ -161,7 +154,7 @@ mod tests {
     use anyhow::Ok;
 
     use super::*;
-    use crate::assert_approx_eq;
+    use crate::{assert_approx_eq, common::deg2rad};
     #[test]
     fn test_rho() -> anyhow::Result<()> {
         // 根据《滚动轴承分析》第一卷例2.5的测试用例

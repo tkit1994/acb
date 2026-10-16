@@ -5,6 +5,13 @@ use scirs2::{
     special::elliptic_ext::{ellipe_agm, ellipk_agm},
 };
 
+pub fn deg2rad(alpha: f64) -> f64 {
+    alpha * PI / 180.0
+}
+
+pub fn rad2deg(alpha: f64) -> f64 {
+    alpha * 180.0 / PI
+}
 // 载荷分布积分计算
 pub fn jra(epsilon: f64, n: f64) -> anyhow::Result<(f64, f64)> {
     let f_a = |psi: f64| -> f64 {
