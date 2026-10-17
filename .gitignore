@@ -2,5 +2,5 @@
 /pkg
 *.js
 *.ts
-/example/*
+/example/pkg
 !.gitkeep
