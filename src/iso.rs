@@ -47,7 +47,7 @@ pub fn fcr(a1: f64, lambda: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result
     Ok(base_coeff * term1 * term2 * term3)
 }
 // ISO 76 中静载荷系数
-pub fn f0r(gamma: f64, fi: f64, fe: f64, sigma_max: f64) -> anyhow::Result<f64> {
+pub fn f0(coefficient: f64, gamma: f64, fi: f64, fe: f64, sigma_max: f64) -> anyhow::Result<f64> {
     // 1. 计算f_rho
     let (_, f_rho_i) = calc_sum_rho_f_rho_i(gamma, 1.0, fi)?;
     // 1. 计算 e, kappa
@@ -58,7 +58,7 @@ pub fn f0r(gamma: f64, fi: f64, fe: f64, sigma_max: f64) -> anyhow::Result<f64> 
     let numerator_term2 = ellipe_agm(m_i)?;
     let denominator_term2 = 2.0 + gamma / (1.0 - gamma) - 1.0 / (2.0 * fi);
     let term2 = numerator_term2 / denominator_term2;
-    let f0i = 2.072 * term1.powf(3.0) * kappa_i * term2.powf(2.0);
+    let f0i = coefficient * term1.powf(3.0) * kappa_i * term2.powf(2.0);
 
     // 外圈
 
@@ -68,21 +68,16 @@ pub fn f0r(gamma: f64, fi: f64, fe: f64, sigma_max: f64) -> anyhow::Result<f64> 
     let numerator_term2e = ellipe_agm(m_e)?;
     let denominator_term2e = 2.0 - gamma / (1.0 + gamma) - 1.0 / (2.0 * fe);
     let term2e = numerator_term2e / denominator_term2e;
-    let f0e = 2.072 * term1.powf(3.0) * kappa_e * term2e.powf(2.0);
+    let f0e = coefficient * term1.powf(3.0) * kappa_e * term2e.powf(2.0);
     // 取两者最小的值
     let f0 = f0e.min(f0i);
     Ok(f0)
 }
-
 #[cfg(test)]
 mod tests {
-    use anyhow::Ok;
+    use crate::assert_approx_eq;
 
-    use crate::{
-        assert_approx_eq,
-        iso::{f0r, fcr},
-    };
-
+    use super::*;
     #[test]
     fn test_fcr_iso281() -> anyhow::Result<()> {
         // 测试数据来自 GB/T 6391-2010 表5.1.2.2
@@ -131,20 +126,45 @@ mod tests {
         let fe = 0.53;
         let sigma_max = 4200.0;
         let gamma = 0.1;
-        let f0 = f0r(gamma, fi, fe, sigma_max)?;
-        assert_approx_eq!(f0, 16.4, eps);
+        let coefficient = 2.072;
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 16.4, eps);
         let gamma = 0.2;
-        let f0 = f0r(gamma, fi, fe, sigma_max)?;
-        assert_approx_eq!(f0, 14.0, eps);
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 14.0, eps);
         let gamma = 0.3;
-        let f0 = f0r(gamma, fi, fe, sigma_max)?;
-        assert_approx_eq!(f0, 11.6, eps);
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 11.6, eps);
         let gamma = 0.4;
-        let f0 = f0r(gamma, fi, fe, sigma_max)?;
-        assert_approx_eq!(f0, 9.4, eps);
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 9.4, eps);
         let gamma = 0.01;
-        let f0 = f0r(gamma, fi, fe, sigma_max)?;
-        assert_approx_eq!(f0, 14.7, eps);
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 14.7, eps);
+        Ok(())
+    }
+    #[test]
+    fn test_f0a_iso76() -> anyhow::Result<()> {
+        let eps = 0.1;
+        let fi = 0.54;
+        let fe = 0.54;
+        let sigma_max = 4200.0;
+        let gamma = 0.1;
+        let coefficient = 10.362;
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 53.5, eps);
+        let gamma = 0.2;
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 45.7, eps);
+        let gamma = 0.3;
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 38.2, eps);
+        let gamma = 0.35;
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 34.6, eps);
+        let gamma = 0.01;
+        let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+        assert_approx_eq!(f0r, 60.8, eps);
         Ok(())
     }
     #[test]
@@ -154,10 +174,27 @@ mod tests {
         let fe = 0.53;
         let sigma_max = 4200.0;
         let mut gamma = 0.00;
+        let coefficient = 2.072;
         println!("{}\t{}", "gamma", "f0");
-        while gamma < 0.4 + 1e-5 {
-            let f0 = f0r(gamma, fi, fe, sigma_max)?;
-            println!("{:.2}\t{:.1}", gamma, f0);
+        while gamma < 0.4 + f64::EPSILON {
+            let f0r = f0(coefficient, gamma, fi, fe, sigma_max)?;
+            println!("{:.2}\t{:.1}", gamma, f0r);
+            gamma += 0.01;
+        }
+        Ok(())
+    }
+    #[test]
+    #[ignore]
+    fn test_print_f0a_iso76() -> anyhow::Result<()> {
+        let fi = 0.54;
+        let fe = 0.54;
+        let sigma_max = 4200.0;
+        let mut gamma = 0.00;
+        let coefficient = 10.362;
+        println!("{}\t{}", "gamma", "f0");
+        while gamma < 0.35 + f64::EPSILON {
+            let f0a = f0(coefficient, gamma, fi, fe, sigma_max)?;
+            println!("{:.2}\t{:.1}", gamma, f0a);
             gamma += 0.01;
         }
         Ok(())
