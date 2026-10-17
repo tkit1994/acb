@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
 use roots::{SimpleConvergency, find_root_brent};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     common::{hertz_coefficients, jra},
@@ -8,7 +9,7 @@ use crate::{
 };
 
 // 计算输入
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ACBInput {
     pub dw: f64,
     pub dpw: f64,
@@ -21,7 +22,7 @@ pub struct ACBInput {
 }
 
 // 计算输出结果
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ACBOut {
     pub cr: f64,
     pub c0r: f64,
@@ -31,7 +32,7 @@ pub struct ACBOut {
 }
 
 // 载荷输出结果
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LoadResult {
     pub psi: Vec<f64>,
     pub load: Vec<f64>,
@@ -184,7 +185,7 @@ pub fn calc_ca(acb_input: ACBInput) -> anyhow::Result<f64> {
     let lambda = 0.95;
     let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
     let ca = if dw <= 25.4 {
-        fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.8)*alpha.tan()
+        fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.8) * alpha.tan()
     } else {
         3.647 * fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.4) * alpha.tan()
     };

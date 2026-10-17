@@ -10,3 +10,6 @@ fmt:
 
 check:
 	cargo clippy
+
+wasm-web:
+	wasm-pack build --target nodejs --mode no-install --release --out-dir=example/pkg

@@ -12,6 +12,7 @@ pub mod common;
 pub mod core;
 pub mod iso;
 pub mod macros;
+pub mod wasm;
 
 pub fn calc_all(acb_input: ACBInput) -> anyhow::Result<ACBOut> {
     let c0a = calc_c0a(acb_input)?;
