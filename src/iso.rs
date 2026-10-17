@@ -138,6 +138,10 @@ pub fn f0(coefficient: f64, gamma: f64, fi: f64, fe: f64, sigma_max: f64) -> any
     let f0 = f0e.min(f0i);
     Ok(f0)
 }
+
+pub fn equilvant_load(x: f64, y: f64, fr: f64, fa: f64) -> f64 {
+    x * fr + y * fa
+}
 #[cfg(test)]
 mod tests {
     use anyhow::Ok;
