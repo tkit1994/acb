@@ -2,7 +2,9 @@ use std::f64::consts::PI;
 
 use roots::{SimpleConvergency, find_root_brent};
 
-use crate::common::{hertz_coefficients, jra};
+use crate::{
+    common::{hertz_coefficients, jra}, iso::{f0, fca, fcr},
+};
 
 // 计算输入
 #[derive(Debug)]
@@ -147,6 +149,78 @@ pub fn calc_dist_all(acb_input: ACBInput) -> anyhow::Result<LoadResult> {
     };
 
     Ok(load_result)
+}
+
+pub fn calc_cr(acb_input: ACBInput) -> anyhow::Result<f64> {
+    let dw = acb_input.dw;
+    let dm = acb_input.dpw;
+    let alpha = acb_input.alpha;
+    let fi = acb_input.fi;
+    let fe = acb_input.fe;
+    let z = acb_input.z as f64;
+    let gamma = dw * alpha.cos() / dm;
+    let a1 = 98.0665 / 0.089;
+    let lambda = 0.95;
+    let fc = fcr(a1, lambda, fi, fe, gamma)?;
+    let cr = if dw <= 25.4 {
+        fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.8)
+    } else {
+        3.647 * fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.4)
+    };
+    Ok(cr)
+}
+
+pub fn calc_ca(acb_input: ACBInput) -> anyhow::Result<f64> {
+    let dw = acb_input.dw;
+    let dm = acb_input.dpw;
+    let alpha = acb_input.alpha;
+    let fi = acb_input.fi;
+    let fe = acb_input.fe;
+    let z = acb_input.z as f64;
+    let gamma = dw * alpha.cos() / dm;
+    let a1 = 98.0665 / 0.089;
+    let lambda = 0.95;
+    let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
+    let ca = if dw <= 25.4 {
+        fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.8).tan()
+    } else {
+        3.647 * fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.4) * alpha.tan()
+    };
+    Ok(ca)
+}
+
+pub fn calc_c0a(acb_input: ACBInput) -> anyhow::Result<f64> {
+
+    let dw = acb_input.dw;
+    let dm = acb_input.dpw;
+    let alpha = acb_input.alpha;
+    let fi = acb_input.fi;
+    let fe = acb_input.fe;
+    let z = acb_input.z as f64;
+    let gamma = dw * alpha.cos() / dm;
+
+    let sigma_max = 4200.0;
+    let coefficient = 2.072;
+    let f0 = f0(coefficient, gamma, fi, fe, sigma_max)?;
+    let c0a = f0 * z * dw.powf(2.0) * alpha.cos();
+    Ok(c0a)
+}
+
+pub fn calc_c0r(acb_input: ACBInput) -> anyhow::Result<f64> {
+
+    let dw = acb_input.dw;
+    let dm = acb_input.dpw;
+    let alpha = acb_input.alpha;
+    let fi = acb_input.fi;
+    let fe = acb_input.fe;
+    let z = acb_input.z as f64;
+    let gamma = dw * alpha.cos() / dm;
+
+    let sigma_max = 4200.0;
+    let coefficient = 10.362;
+    let f0 = f0(coefficient, gamma, fi, fe, sigma_max)?;
+    let c0r = f0 * z * dw.powf(2.0) * alpha.sin();
+    Ok(c0r)
 }
 #[cfg(test)]
 mod tests {
