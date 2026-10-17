@@ -3,11 +3,12 @@ use std::f64::consts::PI;
 use roots::{SimpleConvergency, find_root_brent};
 
 use crate::{
-    common::{hertz_coefficients, jra}, iso::{f0, fca, fcr},
+    common::{hertz_coefficients, jra},
+    iso::{f0, fca, fcr},
 };
 
 // 计算输入
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ACBInput {
     pub dw: f64,
     pub dpw: f64,
@@ -26,6 +27,7 @@ pub struct ACBOut {
     pub c0r: f64,
     pub ca: f64,
     pub c0a: f64,
+    pub load_result: LoadResult,
 }
 
 // 载荷输出结果
@@ -182,15 +184,14 @@ pub fn calc_ca(acb_input: ACBInput) -> anyhow::Result<f64> {
     let lambda = 0.95;
     let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
     let ca = if dw <= 25.4 {
-        fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.8).tan()
+        fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.8)*alpha.tan()
     } else {
         3.647 * fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.4) * alpha.tan()
     };
     Ok(ca)
 }
 
-pub fn calc_c0a(acb_input: ACBInput) -> anyhow::Result<f64> {
-
+pub fn calc_c0r(acb_input: ACBInput) -> anyhow::Result<f64> {
     let dw = acb_input.dw;
     let dm = acb_input.dpw;
     let alpha = acb_input.alpha;
@@ -202,12 +203,11 @@ pub fn calc_c0a(acb_input: ACBInput) -> anyhow::Result<f64> {
     let sigma_max = 4200.0;
     let coefficient = 2.072;
     let f0 = f0(coefficient, gamma, fi, fe, sigma_max)?;
-    let c0a = f0 * z * dw.powf(2.0) * alpha.cos();
-    Ok(c0a)
+    let c0r = f0 * z * dw.powf(2.0) * alpha.cos();
+    Ok(c0r)
 }
 
-pub fn calc_c0r(acb_input: ACBInput) -> anyhow::Result<f64> {
-
+pub fn calc_c0a(acb_input: ACBInput) -> anyhow::Result<f64> {
     let dw = acb_input.dw;
     let dm = acb_input.dpw;
     let alpha = acb_input.alpha;
