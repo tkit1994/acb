@@ -3,7 +3,13 @@ name = "acb"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 anyhow = "1.0.104"
 roots = "0.0.8"
+rustmex = { version = "0.6.4", features = ["matlab800"] }
 scirs2 = "0.6.5"
+
+

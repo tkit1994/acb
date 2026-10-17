@@ -1,0 +1,7 @@
+
+[target.x86_64-pc-windows-gnu.mex800]
+rustc-link-search = [
+    "C:\\Program Files\\MATLAB\\R2026b\\extern\\lib\\win64\\mingw64",
+    "C:\\Program Files\\MATLAB\\R2026b\\bin\\win64",
+]
+rustc-link-lib = ["libmx", "libmex", "libmat"]
