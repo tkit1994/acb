@@ -2,7 +2,7 @@ use anyhow::ensure;
 use scirs2::special::elliptic_ext::ellipe_agm;
 
 use crate::{
-    common::hertz_coefficients,
+    common::{deg2rad, hertz_coefficients},
     core::{calc_sum_rho_f_rho_i, calc_sum_rho_f_rho_o},
 };
 
@@ -47,7 +47,7 @@ pub fn fcr(a1: f64, lambda: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result
     Ok(base_coeff * term1 * term2 * term3)
 }
 
-pub fn fca(a1: f64, lambda: f64, eta: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result<f64> {
+pub fn fca(a1: f64, lambda: f64, alpha: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result<f64> {
     ensure!(
         (2.0 * fi - 1.0).abs() >= f64::EPSILON,
         "计算错误: 分母 (2 * fi - 1) 接近零，导致除零异常 (fi = {})",
@@ -62,6 +62,7 @@ pub fn fca(a1: f64, lambda: f64, eta: f64, fi: f64, fe: f64, gamma: f64) -> anyh
         "计算错误: 几何比 gamma 超出有效范围 [0, 1) (实际值: {})",
         gamma
     );
+    let eta = 1.0 - alpha.sin() / 3.0;
     // 2. 利用无量纲系数计算内圈几何项
     let term_i = (2.0 * fi) / (2.0 * fi - 1.0);
     let term_i_pow = term_i.powf(0.41);
@@ -85,7 +86,9 @@ pub fn fca(a1: f64, lambda: f64, eta: f64, fi: f64, fe: f64, gamma: f64) -> anyh
     Ok(result)
 }
 
-pub fn fca90(a1: f64, lambda: f64, eta: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result<f64> {
+pub fn fca90(a1: f64, lambda: f64, fi: f64, fe: f64, gamma: f64) -> anyhow::Result<f64> {
+    let eta = 1.0 - deg2rad(90.0).sin() / 3.0;
+
     let term_i = (2.0 * fi) / (2.0 * fi - 1.0);
     let term_i_pow = term_i.powf(0.41);
 
@@ -176,51 +179,47 @@ mod tests {
         let fi = 0.535;
         let fe = 0.535;
         let alpha = deg2rad(45.0);
-        let eta = 1.0 - alpha.sin() / 3.0;
         let gamma = 0.01;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 42.1, eps);
         let gamma = 0.1;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 79.7, eps);
         let gamma = 0.2;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 84.5, eps);
         let gamma = 0.3;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 79.6, eps);
         let alpha = deg2rad(60.0);
-        let eta = 1.0 - alpha.sin() / 3.0;
         let gamma = 0.01;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 39.2, eps);
         let gamma = 0.1;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 74.2, eps);
         let gamma = 0.2;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 79.5, eps);
         let alpha = deg2rad(75.0);
-        let eta = 1.0 - alpha.sin() / 3.0;
         let gamma = 0.01;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 37.3, eps);
         let gamma = 0.1;
-        let fc = fca(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca(a1, lambda, alpha, fi, fe, gamma)?;
         assert_approx_eq!(fc, 70.7, eps);
-        let alpha = deg2rad(90.0);
-        let eta = 1.0 - alpha.sin() / 3.0;
+        // alpha = 90 deg
         let gamma = 0.01;
-        let fc = fca90(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca90(a1, lambda, fi, fe, gamma)?;
         assert_approx_eq!(fc, 36.7, eps);
         let gamma = 0.1;
-        let fc = fca90(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca90(a1, lambda, fi, fe, gamma)?;
         assert_approx_eq!(fc, 73.3, eps);
         let gamma = 0.2;
-        let fc = fca90(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca90(a1, lambda, fi, fe, gamma)?;
         assert_approx_eq!(fc, 90.2, eps);
         let gamma = 0.35;
-        let fc = fca90(a1, lambda, eta, fi, fe, gamma)?;
+        let fc = fca90(a1, lambda, fi, fe, gamma)?;
         assert_approx_eq!(fc, 106.7, eps);
         Ok(())
     }
@@ -239,11 +238,10 @@ mod tests {
         for gamma in gamma_range {
             print!("{:.2}\t", gamma);
             for alpha in alpha_range {
-                let eta = 1.0 - alpha.sin() / 3.0;
                 let fc = if (alpha - deg2rad(90.0)).abs() > f64::EPSILON {
-                    fca(a1, lambda, eta, fi, fe, gamma)?
+                    fca(a1, lambda, alpha, fi, fe, gamma)?
                 } else {
-                    fca90(a1, lambda, eta, fi, fe, gamma)?
+                    fca90(a1, lambda, fi, fe, gamma)?
                 };
                 print!("{:.1}\t", fc);
             }
