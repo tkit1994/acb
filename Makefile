@@ -13,3 +13,9 @@ check:
 
 wasm-web:
 	wasm-pack build --target web --mode no-install --release --out-dir=../frontend/pkg wasm_wrapper
+
+mex:
+	cargo build -p mex_wrapper --release
+
+build:
+	cargo build --release

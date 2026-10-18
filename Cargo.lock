@@ -571,6 +571,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
+name = "mex_wrapper"
+version = "0.1.0"
+dependencies = [
+ "acb_core",
+ "rustmex",
+]
+
+[[package]]
+name = "more-asserts"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fafa6961cabd9c63bcd77a45d7e3b7f3b552b70417831fb0f56db717e72407e"
+
+[[package]]
 name = "nalgebra"
 version = "0.33.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -585,6 +599,19 @@ dependencies = [
  "rand_distr 0.4.3",
  "simba",
  "typenum",
+]
+
+[[package]]
+name = "ndarray"
+version = "0.15.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adb12d4e967ec485a5f71c6311fe28158e9d6f4bc4a447b474184d0f91a8fa32"
+dependencies = [
+ "matrixmultiply",
+ "num-complex",
+ "num-integer",
+ "num-traits",
+ "rawpointer",
 ]
 
 [[package]]
@@ -611,7 +638,7 @@ version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "180f724d496e84764e8ecf28fbe1da74ef231ec4ba15be65a9100be8445d73e3"
 dependencies = [
- "ndarray",
+ "ndarray 0.17.2",
  "rand 0.9.5",
  "rand_distr 0.5.1",
 ]
@@ -777,7 +804,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "796fd699643634753a2314234ea1fab6f6fa9caa123f5797830894f0fa91ec86"
 dependencies = [
  "bytemuck",
- "ndarray",
+ "ndarray 0.17.2",
  "num-complex",
  "num-traits",
  "oxiblas-blas",
@@ -1137,6 +1164,83 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustmex"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f7b1dad0a0ee3a64c57b0b4db64bb4f545c1508094261a6fd0ac49534e02e99"
+dependencies = [
+ "cfg-if",
+ "more-asserts",
+ "ndarray 0.15.6",
+ "num-complex",
+ "rustmex-entrypoint",
+ "rustmex_core 0.3.0",
+ "rustmex_interleaved_complex",
+ "rustmex_matlab800",
+ "rustmex_separated_complex",
+]
+
+[[package]]
+name = "rustmex-entrypoint"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11619873359034387045dccfa9071a1a4066cc73db70ff9b3ead2bc8cf61dc72"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "rustmex_core"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dd66638592eeb8d23a68c96dffbb4f7763f087232faecd1012a94ab36b9722f"
+dependencies = [
+ "num-complex",
+]
+
+[[package]]
+name = "rustmex_core"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "092c8b064a581f90fcfb5786b9a57deaf0ab3a2fa3dca3798b177e0af497bcc7"
+dependencies = [
+ "num-complex",
+]
+
+[[package]]
+name = "rustmex_interleaved_complex"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd0f7794ea7054f9e3de72a4023aa4817ac274309922dc0447c9bfcdee3a04cf"
+dependencies = [
+ "ndarray 0.15.6",
+ "num-complex",
+ "rustmex_core 0.2.0",
+]
+
+[[package]]
+name = "rustmex_matlab800"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef705151c86b65bb146b55599064ff50938703c72602f09f2b787f85182d70f9"
+dependencies = [
+ "num-complex",
+ "rustmex_core 0.3.0",
+]
+
+[[package]]
+name = "rustmex_separated_complex"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdd756f28644f8cea1ed6a3778184e74470b79476104fd8a438437f1b179ddc0"
+dependencies = [
+ "ndarray 0.15.6",
+ "num-complex",
+ "rustmex_core 0.2.0",
+]
+
+[[package]]
 name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1189,7 +1293,7 @@ dependencies = [
  "getrandom 0.4.3",
  "libloading",
  "log",
- "ndarray",
+ "ndarray 0.17.2",
  "ndarray-rand",
  "num-complex",
  "num-integer",
@@ -1341,7 +1445,7 @@ dependencies = [
  "getrandom 0.3.4",
  "getrandom 0.4.3",
  "js-sys",
- "ndarray",
+ "ndarray 0.17.2",
  "num-complex",
  "scirs2-core",
  "scirs2-fft",
@@ -1471,6 +1575,17 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "syn"
+version = "1.0.109"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
 
 [[package]]
 name = "syn"

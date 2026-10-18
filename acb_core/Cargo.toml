@@ -1,7 +1,9 @@
 [package]
-name = "acb_core"
+name    = "acb_core"
 version = "0.1.0"
 edition = "2024"
+authors = ["tkit tkit@tkit.eu.org"]
+license = "MIT"
 
 [dependencies]
 anyhow = "1.0.104"
@@ -11,4 +13,6 @@ scirs2 = { version = "0.6.5", features = [
     "special",
     "integrate",
 ], default-features = false }
-serde = { version = "1.0.229", features = ["derive"] }
+serde = { version = "1.0.229", features = [
+    "derive",
+] }

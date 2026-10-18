@@ -1,4 +1,12 @@
 [workspace]
-members = ["acb_core", "wasm_wrapper"]
-
+members = [
+    "acb_core",
+    "wasm_wrapper",
+    "mex_wrapper",
+]
+default-members = [
+    "acb_core",
+    "wasm_wrapper",
+    "mex_wrapper",
+]
 resolver = "3"
