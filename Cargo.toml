@@ -4,10 +4,6 @@ members = [
     "wasm_wrapper",
     "mex_wrapper",
 ]
-default-members = [
-    "acb_core",
-    "wasm_wrapper",
-    "mex_wrapper",
-]
+default-members = ["acb_core", "wasm_wrapper"]
 
 resolver = "3"
