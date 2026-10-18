@@ -1,7 +1,7 @@
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::prelude::*;
 
-use crate::{calc_all, core::ACBInput};
+use acb_core::{calc_all, core::ACBInput};
 
 #[wasm_bindgen]
 pub fn calc(json: JsValue) -> Result<JsValue, JsValue> {

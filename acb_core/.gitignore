@@ -1,0 +1,6 @@
+/target
+/pkg
+*.js
+*.ts
+/example/pkg
+!.gitkeep
