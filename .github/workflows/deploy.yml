@@ -2,7 +2,7 @@ name: Deploy wasm-pack to GitHub Pages
 
 on:
   push:
-    branches: [ "wasm", "dev", "master" ]
+    branches: [ "dev" ]
   workflow_dispatch:
 
 
@@ -24,14 +24,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-        target: wasm32-unknown-unknown
 
     - name: Cache Rust crates
       uses: Swatinem/rust-cache@v2
