@@ -2,10 +2,10 @@ name: Rust
 
 on:
   push:
-    branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "master" ]
-  workflow_dispatch: 
+    branches: [ "master", "dev" ]
+  workflow_dispatch:
+
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Cache Rust crates
+      uses: Swatinem/rust-cache@v2
     - name: Build
       run: cargo build --verbose
     - name: Run tests

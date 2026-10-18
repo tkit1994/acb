@@ -1,0 +1,14 @@
+[package]
+name = "acb_core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+roots = "0.0.8"
+scirs2 = { version = "0.6.5", features = [
+    "wasm",
+    "special",
+    "integrate",
+], default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }

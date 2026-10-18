@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ACB 计算器</title>
+    <style>
+        :root {
+            --bg: #e8ecef;
+            --panel: #f6f8f9;
+            --ink: #14222e;
+            --muted: #5d6b77;
+            --line: #c5ced6;
+            --accent: #0f5c8c;
+            --accent-ink: #ffffff;
+            --ok: #1f7a4d;
+            --err: #b3261e;
+            --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+            --sans: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #10181f;
+                --panel: #19232c;
+                --ink: #e4ebf0;
+                --muted: #93a2ae;
+                --line: #2f3d49;
+                --accent: #5fb0e0;
+                --accent-ink: #0b1a24;
+                --ok: #5bc88e;
+                --err: #ff8a80;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 15px/1.5 var(--sans);
+        }
+
+        header {
+            padding: 28px 24px 8px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: .01em;
+        }
+
+        header p {
+            margin: 4px 0 0;
+            color: var(--muted);
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 24px 48px;
+            display: grid;
+            grid-template-columns: minmax(280px, 380px) 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 760px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        section {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 16px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--muted);
+        }
+
+        .status.ready .dot {
+            background: var(--ok);
+        }
+
+        .status.fail .dot {
+            background: var(--err);
+        }
+
+        .field {
+            display: grid;
+            grid-template-columns: 1fr 140px;
+            gap: 4px 12px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .field label {
+            font-size: 14px;
+        }
+
+        .field label small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        input[type=number] {
+            width: 100%;
+            padding: 7px 9px;
+            font: 14px var(--mono);
+            color: var(--ink);
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            text-align: right;
+        }
+
+        input:focus-visible,
+        button:focus-visible,
+        summary:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .hint {
+            grid-column: 2;
+            text-align: right;
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--mono);
+            min-height: 1em;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            font: inherit;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--ink);
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .empty {
+            color: var(--muted);
+            padding: 24px 0;
+        }
+
+        .error {
+            color: var(--err);
+            border: 1px solid var(--err);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-family: var(--mono);
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
+        }
+
+        td.num {
+            font-family: var(--mono);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .group {
+            margin: 18px 0 6px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .group:first-child {
+            margin-top: 0;
+        }
+
+        .scroll {
+            overflow-x: auto;
+        }
+
+        details {
+            margin-top: 18px;
+        }
+
+        summary {
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        pre {
+            margin: 8px 0 0;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            overflow: auto;
+            font: 12px/1.5 var(--mono);
+            max-height: 360px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>ACB 计算器</h1>
+        <p>输入几何参数与载荷，调用 WebAssembly 模块 <code>calc</code> 并展示结果。</p>
+    </header>
+
+    <main>
+        <section aria-labelledby="in-h">
+            <h2 id="in-h">输入参数</h2>
+            <div id="status" class="status"><span class="dot"></span><span id="status-text">正在加载 wasm…</span></div>
+            <form id="form" autocomplete="off">
+                <div id="fields"></div>
+                <div class="actions">
+                    <button type="submit" class="primary" id="run" disabled>计算</button>
+                    <button type="button" id="reset">恢复默认</button>
+                </div>
+            </form>
+        </section>
+
+        <section aria-labelledby="out-h">
+            <h2 id="out-h">计算结果</h2>
+            <div id="result" aria-live="polite">
+                <p class="empty">填写参数后点击“计算”。</p>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import init, { calc } from './pkg/wasm_wrapper.js';
+
+        // 字段定义：名称、说明、默认值、步长
+        const FIELDS = [
+            { key: 'dw', label: 'dw', note: '滚动体直径', value: 22.23, step: 'any' },
+            { key: 'dpw', label: 'dpw', note: '节圆直径', value: 125.3, step: 'any' },
+            { key: 'z', label: 'z', note: '滚动体个数', value: 16, step: 1 },
+            { key: 'alpha', label: 'alpha', note: '接触角（弧度）', value: 0.698, step: 'any' },
+            { key: 'fr', label: 'fr', note: '径向载荷', value: 17800.0, step: 'any' },
+            { key: 'fa', label: 'fa', note: '轴向载荷', value: 17800.0, step: 'any' },
+            { key: 'fi', label: 'fi', note: '内圈沟曲率系数', value: 11.6 / 22.23, step: 'any' },
+            { key: 'fe', label: 'fe', note: '外圈沟曲率系数', value: 11.6 / 22.23, step: 'any' },
+        ];
+
+        const $ = (id) => document.getElementById(id);
+        const form = $('form'), runBtn = $('run');
+
+        // 生成输入框
+        $('fields').innerHTML = FIELDS.map(f => `
+    <div class="field">
+      <label for="f-${f.key}">${f.label}<small>${f.note}</small></label>
+      <input id="f-${f.key}" name="${f.key}" type="number" step="${f.step}" required>
+      <div class="hint" id="h-${f.key}"></div>
+    </div>`).join('');
+
+        function fillDefaults() {
+            FIELDS.forEach(f => { $('f-' + f.key).value = f.value; });
+            updateHints();
+        }
+
+        function updateHints() {
+            const a = parseFloat($('f-alpha').value);
+            $('h-alpha').textContent = isFinite(a) ? `≈ ${(a * 180 / Math.PI).toFixed(2)}°` : '';
+        }
+
+        function readInput() {
+            const o = {};
+            FIELDS.forEach(f => { o[f.key] = parseFloat($('f-' + f.key).value); });
+            return o;
+        }
+
+        // ---------- 结果渲染 ----------
+        const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+        function fmt(v) {
+            if (typeof v === 'number') {
+                if (!isFinite(v)) return String(v);
+                if (Number.isInteger(v)) return String(v);
+                const abs = Math.abs(v);
+                return (abs !== 0 && (abs < 1e-3 || abs >= 1e7)) ? v.toExponential(5) : String(+v.toPrecision(7));
+            }
+            if (typeof v === 'bigint') return v.toString();
+            if (v === null || v === undefined) return '—';
+            return esc(v);
+        }
+
+        // Map（serde 序列化 HashMap 时会得到 Map）转普通对象
+        function normalize(v) {
+            if (v instanceof Map) return normalize(Object.fromEntries(v));
+            if (Array.isArray(v)) return v.map(normalize);
+            if (v && typeof v === 'object') {
+                return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, normalize(x)]));
+            }
+            return v;
+        }
+
+        const isPrimitive = (v) => v === null || typeof v !== 'object';
+        const isRecordArray = (v) =>
+            Array.isArray(v) && v.length > 0 && v.every(x => x && typeof x === 'object' && !Array.isArray(x));
+
+        function renderValue(title, v) {
+            // 对象数组 → 多列表格
+            if (isRecordArray(v)) {
+                const cols = [...new Set(v.flatMap(r => Object.keys(r)))];
+                return `${title ? `<div class="group">${esc(title)}</div>` : ''}
+        <div class="scroll"><table>
+          <thead><tr><th>#</th>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+          <tbody>${v.map((r, i) => `<tr><td class="num">${i + 1}</td>${cols.map(c =>
+                    `<td class="num">${isPrimitive(r[c]) ? fmt(r[c]) : esc(JSON.stringify(r[c]))}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table></div>`;
+            }
+            // 数值数组 → 两列表格
+            if (Array.isArray(v)) {
+                return `${title ? `<div class="group">${esc(title)}</div>` : ''}
+        <div class="scroll"><table><tbody>${v.map((x, i) =>
+                    `<tr><th>[${i}]</th><td class="num">${isPrimitive(x) ? fmt(x) : esc(JSON.stringify(x))}</td></tr>`).join('')}</tbody></table></div>`;
+            }
+            // 对象 → 基本类型成一张表，嵌套的各自成组
+            if (v && typeof v === 'object') {
+                const prims = Object.entries(v).filter(([, x]) => isPrimitive(x));
+                const nested = Object.entries(v).filter(([, x]) => !isPrimitive(x));
+                let html = title ? `<div class="group">${esc(title)}</div>` : '';
+                if (prims.length) {
+                    html += `<div class="scroll"><table><tbody>${prims.map(([k, x]) =>
+                        `<tr><th>${esc(k)}</th><td class="num">${fmt(x)}</td></tr>`).join('')}</tbody></table></div>`;
+                }
+                html += nested.map(([k, x]) => renderValue(k, x)).join('');
+                return html;
+            }
+            return `<div class="scroll"><table><tbody><tr><th>result</th><td class="num">${fmt(v)}</td></tr></tbody></table></div>`;
+        }
+
+        function showResult(res) {
+            const data = normalize(res);
+            const json = JSON.stringify(data, (_, x) => typeof x === 'bigint' ? x.toString() : x, 2);
+            $('result').innerHTML = renderValue('', data) +
+                `<details><summary>查看原始 JSON</summary><pre>${esc(json)}</pre></details>`;
+        }
+
+        function showError(e) {
+            $('result').innerHTML = `<div class="error">${esc(e && e.message ? e.message : e)}</div>`;
+        }
+
+        // ---------- 事件 ----------
+        form.addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            try {
+                const t0 = performance.now();
+                const res = calc(readInput());
+                console.log('calc 用时', (performance.now() - t0).toFixed(2), 'ms', res);
+                showResult(res);
+            } catch (e) {
+                console.error(e);
+                showError(e);
+            }
+        });
+        $('f-alpha').addEventListener('input', updateHints);
+        $('reset').addEventListener('click', fillDefaults);
+
+        fillDefaults();
+
+        // ---------- 加载 wasm ----------
+        const status = $('status');
+        try {
+            await init();
+            status.className = 'status ready';
+            $('status-text').textContent = 'wasm 已就绪';
+            runBtn.disabled = false;
+            window.calc = calc; // 方便在控制台直接调用
+        } catch (e) {
+            console.error(e);
+            status.className = 'status fail';
+            $('status-text').textContent = 'wasm 加载失败';
+            showError('无法加载 ./pkg/acb.js 或 acb_bg.wasm。\n请确认：1) 用 --target web 构建；2) 通过 http 服务器访问，而不是 file://。\n\n' + (e && e.message ? e.message : e));
+        }
+    </script>
+</body>
+
+</html>
