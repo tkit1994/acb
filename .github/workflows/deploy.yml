@@ -1,0 +1,51 @@
+name: Deploy wasm-pack to GitHub Pages
+
+on:
+  push:
+    branches: [wasm]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Cache Rust crates
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build wasm
+        run: wasm-pack build --target web --release --out-dir example/pkg
+
+      # 把pkg文件夹复制到www静态目录，打包静态资源
+
+      # 上传www目录作为部署产物
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./example
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
