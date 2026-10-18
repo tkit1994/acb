@@ -1,0 +1,15 @@
+[package]
+name    = "mex_wrapper"
+version = "0.1.0"
+edition = "2024"
+authors = ["tkit tkit@tkit.eu.org"]
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+acb_core = { path = "../acb_core" }
+rustmex = { version = "0.6.4", features = [
+    "matlab800",
+] }
