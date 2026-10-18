@@ -38,14 +38,7 @@ jobs:
       - name: Build wasm
         run: wasm-pack build --target web --release --out-dir example/pkg
 
-      # 把pkg文件夹复制到www静态目录，打包静态资源
-
-      # 上传www目录作为部署产物
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: ./example
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          folder: example 
