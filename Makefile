@@ -19,3 +19,9 @@ mex:
 
 build:
 	cargo build --release
+
+python:
+	maturin develop -m ./python_wrapper/Cargo.toml
+
+test:
+	cargo test -v
