@@ -3,3 +3,4 @@ pkg
 *.js
 *.ts
 !.gitkeep
+.venv
