@@ -223,6 +223,25 @@ pub fn calc_c0a(acb_input: ACBInput) -> anyhow::Result<f64> {
     let c0r = f0 * z * dw.powf(2.0) * alpha.sin();
     Ok(c0r)
 }
+
+pub fn calc_p0r(acb_input: ACBInput) -> anyhow::Result<f64> {
+    let fr = acb_input.fr;
+    let fa = acb_input.fa;
+    let alpha = acb_input.alpha;
+    let epsilon = calc_epsilon(fr, fa, alpha)?;
+    let (jr, _) = jra(epsilon, 1.5)?;
+    let (jr_05, _) = jra(0.5, 1.5)?;
+    Ok(fr * jr_05 / jr)
+}
+
+pub fn calc_p0a(acb_input: ACBInput) -> anyhow::Result<f64> {
+    let fr = acb_input.fr;
+    let fa = acb_input.fa;
+    let alpha = acb_input.alpha;
+    let epsilon = calc_epsilon(fr, fa, alpha)?;
+    let (_, ja) = jra(epsilon, 1.5)?;
+    Ok(fa / ja)
+}
 #[cfg(test)]
 mod tests {
 
@@ -316,6 +335,24 @@ mod tests {
         };
         let res = calc_dist_all(acb_input)?;
         println!("{:#.4?}", res);
+        Ok(())
+    }
+    #[test]
+    #[ignore = "No test data"]
+    fn test_p0()-> anyhow::Result<()> {
+        let acb_input = ACBInput {
+            dw: 22.23,
+            dpw: 125.3,
+            z: 16,
+            alpha: deg2rad(40.0),
+            fr: 17800.0,
+            fa: 17800.0,
+            fi: 11.6 / 22.23,
+            fe: 11.6 / 22.23,
+        };
+        let p0r = calc_p0r(acb_input)?;
+        let p0a = calc_p0a(acb_input)?;
+        println!("P0r:{}\tP0a:{}", p0r, p0a);
         Ok(())
     }
 }
