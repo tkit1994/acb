@@ -248,6 +248,22 @@ pub fn calc_p0a(acb_input: ACBInput) -> anyhow::Result<f64> {
     let (_, ja) = jra(epsilon, 1.5)?;
     Ok(fa / ja)
 }
+pub fn calc_xa_ya(alpha: f64, fa: f64, fr: f64) -> anyhow::Result<(f64, f64)> {
+    anyhow::ensure!(
+        45f64.to_radians() - alpha < f64::EPSILON,
+        "当作推力球轴承计算时,接触角应大于45度, 当前alpha = {}",
+        alpha.to_degrees()
+    );
+    let e = 1.25 * alpha.tan();
+    let fa_minus_e_fr = fa - e * fr;
+    if fa_minus_e_fr > 0.0 {
+        Ok((e * (1.0 - 2.0 / 3.0 * alpha.sin()), 1.0))
+    } else {
+        let term = 10.0 / 13.0 * (1.0 - 1.0 / 3.0 * alpha.sin());
+        Ok((term * alpha.tan() * 2.0, term))
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -327,6 +343,23 @@ mod tests {
         Ok(())
     }
     #[test]
+    pub fn test_xa_ya() -> anyhow::Result<()> {
+        let eps = 1e-2;
+        let alpha = 45f64.to_radians();
+        let fa = 2.0;
+        let fr = 1.0;
+        let (x, y) = calc_xa_ya(alpha, fa, fr)?;
+        assert_approx_eq!(x, 0.66);
+        assert_approx_eq!(y, 1.0);
+        let alpha = 60f64.to_radians();
+        let fa = 2.0;
+        let fr = 1.0;
+        let (x, y) = calc_xa_ya(alpha, fa, fr)?;
+        assert_approx_eq!(x, 1.89, eps);
+        assert_approx_eq!(y, 0.55, eps);
+        Ok(())
+    }
+    #[test]
     #[ignore]
     fn test_load_distribution_all() -> anyhow::Result<()> {
         let acb_input = ACBInput {
@@ -361,6 +394,21 @@ mod tests {
         let p0r = calc_p0r(acb_input)?;
         let p0a = calc_p0a(acb_input)?;
         println!("P0r:{}\tP0a:{}", p0r, p0a);
+        Ok(())
+    }
+    #[test]
+    #[ignore]
+    fn test_print_xa_ya() -> anyhow::Result<()> {
+        let fa = 1e3;
+        let fr = 1.0;
+        for alpha  in (45..=85).step_by(5) {
+            let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64) , fa, fr)?;
+            println!("{}\t{:.2}\t{}", alpha, xr, yr);
+        }
+        for alpha  in (45..=85).step_by(5) {
+            let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64) , fr, fa)?;
+            println!("{}\t{:.2}\t{:.2}", alpha, xr, yr);
+        }
         Ok(())
     }
 }
