@@ -473,6 +473,7 @@ mod tests {
             fi: 0.5232,
             fe: 0.5232,
             alpha: 41.6f64.to_radians(),
+            lambda: 1.0,
             ..Default::default()
         };
         let qci = calc_qci(acb_input, Some(93.2));
@@ -485,6 +486,7 @@ mod tests {
             fi: 0.5232,
             fe: 0.5232,
             alpha: 41.6f64.to_radians(),
+            lambda: 1.0,
             ..Default::default()
         };
         let qce = calc_qce(acb_input, Some(93.2));
