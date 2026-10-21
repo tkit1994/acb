@@ -250,7 +250,7 @@ pub fn calc_p0a(acb_input: ACBInput) -> anyhow::Result<f64> {
 }
 pub fn calc_xa_ya(alpha: f64, fa: f64, fr: f64) -> anyhow::Result<(f64, f64)> {
     anyhow::ensure!(
-        45f64.to_radians() - alpha < f64::EPSILON,
+        45f64.to_radians() - f64::EPSILON <= alpha,
         "当作推力球轴承计算时,接触角应大于45度, 当前alpha = {}",
         alpha.to_degrees()
     );
@@ -403,12 +403,12 @@ mod tests {
     fn test_print_xa_ya() -> anyhow::Result<()> {
         let fa = 1e3;
         let fr = 1.0;
-        for alpha  in (45..=85).step_by(5) {
-            let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64) , fa, fr)?;
+        for alpha in (45..=85).step_by(5) {
+            let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64), fa, fr)?;
             println!("{}\t{:.2}\t{}", alpha, xr, yr);
         }
-        for alpha  in (45..=85).step_by(5) {
-            let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64) , fr, fa)?;
+        for alpha in (45..=85).step_by(5) {
+            let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64), fr, fa)?;
             println!("{}\t{:.2}\t{:.2}", alpha, xr, yr);
         }
         Ok(())

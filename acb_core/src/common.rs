@@ -1,5 +1,6 @@
 use std::f64::consts::PI;
 
+use anyhow::Ok;
 use scirs2::{
     integrate::quad::{QuadOptions, quad},
     special::elliptic_ext::{ellipe_agm, ellipk_agm},
@@ -32,7 +33,27 @@ pub fn jra(epsilon: f64, n: f64) -> anyhow::Result<(f64, f64)> {
     let jr = quad(f_r, -PI, PI, Some(opts))?;
     Ok((jr.value, ja.value))
 }
-
+// 寿命积分
+// 球轴承
+// j1 = j12(epsilon, 4.5, 3)
+// j2 = j12(epsilon, 5, 10/3)
+// 滚子轴承
+pub fn j12(epsilon: f64, n: f64, k: f64) -> anyhow::Result<f64> {
+    let f = |psi: f64| -> f64 {
+        let term = 1.0 - 1.0 / (2.0 * epsilon) * (1.0 - psi.cos());
+        if term <= 0.0 {
+            0.0
+        } else {
+            term.powf(n) / (2.0 * PI)
+        }
+    };
+    let opts = QuadOptions {
+        use_simpson: true,
+        ..Default::default()
+    };
+    let j12 = quad(f, -PI, PI, Some(opts))?;
+    Ok(j12.value.powf(1.0 / k))
+}
 // let (a_star, b_star, delta_star, e, kappa) = hertz_coff(f_rho)
 #[allow(non_snake_case)]
 pub fn hertz_coefficients(f_rho: f64) -> anyhow::Result<(f64, f64, f64, f64, f64)> {
@@ -62,6 +83,7 @@ pub fn hertz_coefficients(f_rho: f64) -> anyhow::Result<(f64, f64, f64, f64, f64
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use crate::assert_approx_eq;
     #[test]
@@ -103,6 +125,37 @@ mod tests {
                 f_rho, a_star, b_star, delta_star, e, kappa
             );
             f_rho += step;
+        }
+        Ok(())
+    }
+    #[test]
+    fn test_j12() -> anyhow::Result<()> {
+        let eps = 1e-2;
+        let epsilon = 0.1;
+        let j1 = j12(epsilon, 4.5, 3.0)?;
+        let j2 = j12(epsilon, 5.0, 10.0 / 3.0)?;
+        assert_approx_eq!(j1, 0.4275);
+        assert_approx_eq!(j2, 0.4608, eps);
+        let epsilon = 0.5;
+        let j1 = j12(epsilon, 4.5, 3.0)?;
+        let j2 = j12(epsilon, 5.0, 10.0 / 3.0)?;
+        assert_approx_eq!(j1, 0.5625);
+        assert_approx_eq!(j2, 0.5875);
+        let epsilon = 5.0;
+        let j1 = j12(epsilon, 4.5, 3.0)?;
+        let j2 = j12(epsilon, 5.0, 10.0 / 3.0)?;
+        assert_approx_eq!(j1, 0.8675);
+        assert_approx_eq!(j2, 0.8693);
+        Ok(())
+    }
+    #[test]
+    #[ignore]
+    fn test_print_j12() -> anyhow::Result<()> {
+        println!("epsilon\tJ1\tJ2");
+        for epsilon in (1..=50).map(|i| i as f64 / 10.0) {
+            let j1 = j12(epsilon, 4.5, 3.0)?;
+            let j2 = j12(epsilon, 5.0, 10.0 / 3.0)?;
+            println!("{}\t{:.4}\t{:.4}", epsilon, j1, j2);
         }
         Ok(())
     }
