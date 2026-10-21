@@ -4,3 +4,4 @@ pkg
 *.ts
 !.gitkeep
 .venv
+*.pyi
