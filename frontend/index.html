@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ACB 计算器</title>
+    <title>角接触球轴承计算器</title>
     <style>
         :root {
             --bg: #e8ecef;
@@ -265,6 +265,38 @@
             font-size: 13px;
         }
 
+        figure.chart {
+            margin: 0 0 8px;
+        }
+
+        figure.chart svg {
+            display: block;
+            width: 100%;
+            max-width: 560px;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        figure.chart figcaption {
+            font-size: 12.5px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .c-ring { fill: var(--panel); stroke: var(--ink); stroke-width: 1.6; }
+        .c-env { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+        .c-fill { fill: var(--accent); opacity: .12; stroke: none; }
+        .c-arrow { stroke: var(--accent); stroke-width: 1.8; fill: none; }
+        .c-line { stroke: var(--ink); stroke-width: 1.2; fill: none; }
+        .c-dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 5 3; fill: none; }
+        .c-txt { fill: var(--ink); font: 15px var(--sans); }
+        .c-txt .it { font-family: Georgia, "Times New Roman", serif; font-style: italic; }
+        .c-sub { fill: var(--muted); font: 12px var(--mono); }
+        .c-val { fill: var(--ink); font: 600 11.5px var(--mono); }
+        .m-acc { fill: var(--accent); }
+        .m-ink { fill: var(--ink); }
+
         pre {
             margin: 8px 0 0;
             padding: 12px;
@@ -280,7 +312,7 @@
 
 <body>
     <header>
-        <h1>ACB 计算器</h1>
+        <h1>角接触球轴承计算器</h1>
         <p>输入几何参数与载荷，调用 WebAssembly 模块 <code>calc</code> 并展示结果。</p>
     </header>
 
@@ -309,7 +341,7 @@
     </main>
 
     <script type="module">
-        import init, { calc } from './pkg/wasm_wrapper.js';
+        import init, { calc, LoadDistribution } from './pkg/wasm_wrapper.js';
 
         // 字段定义：名称,说明,默认值,步长
         const FIELDS = [
@@ -431,6 +463,8 @@
 
         const isPrimitive = (v) => v === null || typeof v !== 'object';
 
+        let currentChart = '';
+
         function renderLoadResult(lr) {
             if (!lr || typeof lr !== 'object') return '';
             const psi = lr.psi || [];
@@ -451,7 +485,7 @@
                 </tr>`;
             }
 
-            return `<div class="group">载荷分布 (load_result)</div>
+            return currentChart + `<div class="group">载荷分布 (load_result)</div>
             <div class="scroll">
                 <table>
                     <thead>
@@ -493,9 +527,130 @@
             return `<div class="scroll"><table><tbody><tr><th>result</th><td class="num">${fmt(v)}</td></tr></tbody></table></div>`;
         }
 
-        function showResult(res) {
+
+        // ---------- 载荷分布图 ----------
+        const TAU = Math.PI * 2;
+        const wrapPi = (a) => (((a + Math.PI) % TAU) + TAU) % TAU - Math.PI;
+
+        // LoadDistribution 的构造函数与 calc 接收同一份 ACBInput
+        function makeDist(input) {
+            return new LoadDistribution(input);
+        }
+
+        // 由 load(ψ) 数值求承载区半角 ψ_l（load>0 的最大 ψ），不依赖后端暴露 ε
+        function findPsiL(f) {
+            const N = 720;
+            let prev = 0;
+            for (let i = 1; i <= N; i++) {
+                const cur = (Math.PI * i) / N;
+                if (!(f(cur) > 0)) {
+                    let lo = prev, hi = cur;
+                    for (let j = 0; j < 40; j++) {
+                        const mid = (lo + hi) / 2;
+                        if (f(mid) > 0) lo = mid; else hi = mid;
+                    }
+                    return (lo + hi) / 2;
+                }
+                prev = cur;
+            }
+            return Math.PI;
+        }
+
+        function buildLoadChart(input, data) {
+            const lr = data && data.load_result;
+            if (!lr || !Array.isArray(lr.psi) || !Array.isArray(lr.load)) return '';
+
+            // 连续分布函数（来自 wasm）；失败则退化为仅绘制离散载荷
+            let dist = null, note = '';
+            try { dist = makeDist(input); }
+            catch (e) { note = '（LoadDistribution 构造失败，已仅绘制各滚动体载荷：' + esc(e && e.message ? e.message : e) + '）'; }
+
+            try {
+                const f = dist ? (p) => dist.load(p) : null;
+
+                // 各滚动体载荷：ψ 以径向载荷方向为 0，归一化到 (-π, π]
+                const pts = lr.psi
+                    .map((p, i) => ({ psi: wrapPi(p), q: lr.load[i] }))
+                    .filter(d => isFinite(d.q) && d.q > 0)
+                    .sort((a, b) => a.psi - b.psi);
+                const qDisc = Math.max(0, ...pts.map(d => d.q));
+                const qmax = f ? Math.max(f(0), qDisc) : qDisc;
+                if (!(qmax > 0)) return '';
+
+                // 承载区半角 ψ_l（cosψ_l = 1 - 2ε）：优先由 load(ψ) 反推，失败时用离散点近似
+                const psiL = f ? findPsiL(f) : Math.max(0, ...pts.map(d => Math.abs(d.psi)));
+                if (!(psiL > 0)) return '';
+
+                // 几何：ψ=0 朝下（与 Fr 方向一致），内圈半径 R，载荷箭头最大长度 L
+                const W = 520, H = 470, cx = 260, cy = 225, R = 95, L = 90;
+                const k = L / qmax;
+                const P = (psi, r) => [cx + r * Math.sin(psi), cy + r * Math.cos(psi)];
+                const pt = ([x, y]) => x.toFixed(2) + ',' + y.toFixed(2);
+
+                // 包络线 q(ψ)
+                let env = [];
+                if (f) {
+                    const N = 160;
+                    for (let i = 0; i <= N; i++) {
+                        const p = -psiL + (2 * psiL * i) / N;
+                        env.push(P(p, R + k * Math.max(0, f(p))));
+                    }
+                } else {
+                    env = [P(pts[0].psi, R), ...pts.map(d => P(d.psi, R + k * d.q)), P(pts[pts.length - 1].psi, R)];
+                }
+                const envPath = 'M' + env.map(pt).join(' L');
+                const fillPath = envPath + ' L' + [...Array(41)].map((_, i) => pt(P(psiL - (2 * psiL * i) / 40, R))).join(' L') + ' Z';
+
+                // 各滚动体载荷箭头（指向内圈）
+                const arrows = pts.map(d => {
+                    const a = P(d.psi, R + k * d.q), b = P(d.psi, R);
+                    // 载荷数值标注：放在箭尾外侧
+                    const sx = Math.sin(d.psi), cs = Math.cos(d.psi);
+                    const t = P(d.psi, R + k * d.q + 8);
+                    const anchor = sx > 0.3 ? 'start' : sx < -0.3 ? 'end' : 'middle';
+                    const dy = cs > 0.3 ? 11 : cs < -0.3 ? -2 : 4;
+                    const val = Math.abs(d.q) >= 100 ? d.q.toFixed(0) : String(+d.q.toPrecision(3));
+                    // 方位角（0°~360°，与表格“位置角”一致）
+                    const deg = (((d.psi * 180 / Math.PI) % 360) + 360) % 360;
+                    const ang = (Math.abs(deg - Math.round(deg)) < 0.05 ? String(Math.round(deg)) : deg.toFixed(1)) + '°';
+                    const ady = cs > 0.3 ? 12 : cs < -0.3 ? -12 : 16;
+                    return `<line class="c-arrow" x1="${a[0].toFixed(2)}" y1="${a[1].toFixed(2)}" x2="${b[0].toFixed(2)}" y2="${b[1].toFixed(2)}" marker-end="url(#ah-acc)"/>` +
+                        `<text class="c-val" x="${t[0].toFixed(2)}" y="${(t[1] + dy).toFixed(2)}" text-anchor="${anchor}">${val}</text>` +
+                        `<text class="c-sub" x="${t[0].toFixed(2)}" y="${(t[1] + dy + ady).toFixed(2)}" text-anchor="${anchor}">${ang}</text>`;
+                }).join('');
+
+                const yb = cy + R;
+                const pl = P(-psiL, R), pr = P(psiL, R);
+
+                return `<div class="group">载荷分布图</div>
+<figure class="chart">
+<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="滚动轴承载荷分布图">
+  <defs>
+    <marker id="ah-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="m-acc" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+  <path class="c-fill" d="${fillPath}"/>
+  <path class="c-env" d="${envPath}"/>
+  ${arrows}
+  <circle class="c-ring" cx="${cx}" cy="${cy}" r="${R}" fill-opacity=".0"/>
+  <line class="c-dash" x1="${cx - 55}" y1="${cy}" x2="${cx + 55}" y2="${cy}"/>
+  <line class="c-dash" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - R - 25}"/>
+  <line class="c-line" x1="${cx}" y1="${cy}" x2="${pl[0].toFixed(2)}" y2="${pl[1].toFixed(2)}"/>
+  <line class="c-line" x1="${cx}" y1="${cy}" x2="${pr[0].toFixed(2)}" y2="${pr[1].toFixed(2)}"/>
+  <line class="c-line" x1="${cx}" y1="${cy}" x2="${cx}" y2="${yb.toFixed(2)}" marker-end="url(#ah-ink)"/>
+</svg>
+<figcaption>箭头旁：上为载荷（单位同 fr），下为方位角（以径向载荷方向为 0°）；曲线：连续分布 q(ψ) ${note}</figcaption>
+</figure>`;
+            } finally {
+                if (dist && dist.free) dist.free();
+            }
+        }
+
+        function showResult(res, input) {
             const data = normalize(res);
             const json = JSON.stringify(data, (_, x) => typeof x === 'bigint' ? x.toString() : x, 2);
+            currentChart = '';
+            try { currentChart = buildLoadChart(input, data); } catch (e) { console.error(e); }
             $('result').innerHTML = renderValue('', data) +
                 `<details><summary>查看原始 JSON</summary><pre>${esc(json)}</pre></details>`;
         }
@@ -508,9 +663,10 @@
             ev.preventDefault();
             try {
                 const t0 = performance.now();
-                const res = calc(readInput());
+                const input = readInput();
+                const res = calc(input);
                 console.log('calc 用时', (performance.now() - t0).toFixed(2), 'ms', res);
-                showResult(res);
+                showResult(res, input);
             } catch (e) {
                 console.error(e);
                 showError(e);

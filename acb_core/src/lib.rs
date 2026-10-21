@@ -53,7 +53,7 @@ mod tests {
             fa: 17800.0,
             fi: 11.6 / 22.23,
             fe: 11.6 / 22.23,
-            bm: 1.0
+            bm: 1.0,
         };
         let acb_out = calc_all(acb_input)?;
         println!("{:#.4?}", acb_out);

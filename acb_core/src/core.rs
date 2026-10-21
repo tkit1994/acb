@@ -32,7 +32,7 @@ pub struct ACBOut {
     pub load_result: LoadResult,
     pub p0r: f64,
     pub p0a: f64,
-    pub s0: f64
+    pub s0: f64,
 }
 
 // 载荷输出结果
@@ -338,7 +338,7 @@ mod tests {
             fa: 17800.0,
             fi: 11.6 / 22.23,
             fe: 11.6 / 22.23,
-            bm: 1.0
+            bm: 1.0,
         };
         let res = calc_dist_all(acb_input)?;
         println!("{:#.4?}", res);
@@ -346,7 +346,7 @@ mod tests {
     }
     #[test]
     #[ignore = "No test data"]
-    fn test_p0()-> anyhow::Result<()> {
+    fn test_p0() -> anyhow::Result<()> {
         let acb_input = ACBInput {
             dw: 22.23,
             dpw: 125.3,
@@ -356,7 +356,7 @@ mod tests {
             fa: 17800.0,
             fi: 11.6 / 22.23,
             fe: 11.6 / 22.23,
-            bm: 1.0
+            bm: 1.0,
         };
         let p0r = calc_p0r(acb_input)?;
         let p0a = calc_p0a(acb_input)?;
