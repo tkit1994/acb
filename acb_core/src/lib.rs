@@ -47,17 +47,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_calc_all() -> anyhow::Result<()> {
-        let acb_input = ACBInput {
-            dw: 22.23,
-            dpw: 125.3,
-            z: 16,
-            alpha: 40.0f64.to_radians(),
-            fr: 17800.0,
-            fa: 17800.0,
-            fi: 11.6 / 22.23,
-            fe: 11.6 / 22.23,
-            bm: 1.0,
-        };
+        let acb_input = ACBInput::default();
         let acb_out = calc_all(acb_input)?;
         println!("{:#.4?}", acb_out);
 
