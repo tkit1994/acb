@@ -7,6 +7,7 @@ use crate::core::calc_c0r;
 use crate::core::calc_ca;
 use crate::core::calc_cr;
 use crate::core::calc_dist_all;
+use crate::core::calc_life_lp;
 use crate::core::calc_p0a;
 use crate::core::calc_p0r;
 
@@ -24,6 +25,7 @@ pub fn calc_all(acb_input: ACBInput) -> anyhow::Result<ACBOut> {
     let p0r = calc_p0r(acb_input)?;
     let p0a = calc_p0a(acb_input)?;
     let s0 = (c0r / p0r).min(c0a / p0a);
+    let l10 = calc_life_lp(acb_input, None)?;
     let acb_out = ACBOut {
         cr,
         c0r,
@@ -33,6 +35,7 @@ pub fn calc_all(acb_input: ACBInput) -> anyhow::Result<ACBOut> {
         p0a,
         p0r,
         s0,
+        l10,
     };
     Ok(acb_out)
 }

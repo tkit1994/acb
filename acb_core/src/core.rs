@@ -5,7 +5,8 @@ use roots::{SimpleConvergency, find_root_brent};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    common::{hertz_coefficients, j12, jra}, iso::{f0, fca, fcr},
+    common::{hertz_coefficients, j12, jra},
+    iso::{f0, fca, fcr},
 };
 
 // 计算输入
@@ -25,6 +26,8 @@ pub struct ACBInput {
 // 计算输出结果
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ACBOut {
+    pub s0: f64,
+    pub l10: f64,
     pub cr: f64,
     pub c0r: f64,
     pub ca: f64,
@@ -32,7 +35,6 @@ pub struct ACBOut {
     pub load_result: LoadResult,
     pub p0r: f64,
     pub p0a: f64,
-    pub s0: f64,
 }
 
 // 载荷输出结果
@@ -275,11 +277,8 @@ pub fn calc_qci(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
     let term2 = (1.0 - gamma).powf(1.39) / (1.0 + gamma).powf(1.0 / 3.0);
     let term3: f64 = gamma / alpha.cos();
     let term3 = term3.powf(0.3);
-    let coef = match coefficient {
-        Some(value) => value,
-        None => 98.1,
-    };
-    let eta = 1.0 - 1.0/3.0 * alpha.sin();
+    let coef = coefficient.unwrap_or(98.1);
+    let eta = 1.0 - 1.0 / 3.0 * alpha.sin();
     coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
 }
 
@@ -295,11 +294,8 @@ pub fn calc_qce(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
     let term2 = (1.0 + gamma).powf(1.39) / (1.0 - gamma).powf(1.0 / 3.0);
     let term3: f64 = gamma / alpha.cos();
     let term3 = term3.powf(0.3);
-    let coef = match coefficient {
-        Some(value) => value,
-        None => 98.1,
-    };
-    let eta = 1.0 - 1.0/3.0 * alpha.sin();
+    let coef = coefficient.unwrap_or(98.1);
+    let eta = 1.0 - 1.0 / 3.0 * alpha.sin();
     coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
 }
 pub fn calc_life_lp(acb_input: ACBInput, coefficient: Option<f64>) -> anyhow::Result<f64> {
@@ -317,7 +313,7 @@ pub fn calc_life_lp(acb_input: ACBInput, coefficient: Option<f64>) -> anyhow::Re
     let qce = calc_qce(acb_input, coefficient);
     let qee = qmax * j2;
     let le = (qce / qee).powf(3.0);
-    let l = (li.powf(-10.0/9.0) + le.powf(-10.0/9.0)).powf(-9.0 / 10.0);
+    let l = (li.powf(-10.0 / 9.0) + le.powf(-10.0 / 9.0)).powf(-9.0 / 10.0);
     Ok(l)
 }
 #[cfg(test)]
@@ -506,8 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn test_life_lp() -> anyhow::Result<()>{
-        
+    fn test_life_lp() -> anyhow::Result<()> {
         let acb_input = ACBInput {
             dw: 22.23,
             dpw: 125.3,
