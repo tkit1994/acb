@@ -160,7 +160,6 @@
             min-height: 1em;
         }
 
-        /* 优化按钮区域布局，使其排布整齐紧凑 */
         .actions {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -325,6 +324,17 @@
             { key: 'bm', label: 'bm', note: '动载荷系数', value: 1.3, step: '0.1' },
         ];
 
+        // 基础参数中英文对照映射
+        const LABELS = {
+            'cr': '径向额定动载荷 (cr)',
+            'c0r': '径向额定静载荷 (c0r)',
+            'ca': '轴向额定动载荷 (ca)',
+            'c0a': '轴向额定静载荷 (c0a)',
+            'p0r': '轴向当量静载荷 (p0r)',
+            'p0a': '径向当量静载荷 (p0a)',
+            's0': '静安全系数 (s0)'
+        };
+
         const $ = (id) => document.getElementById(id);
         const form = $('form'), runBtn =$('run');
 
@@ -463,8 +473,10 @@
                 const prims = Object.entries(v).filter(([k, x]) => isPrimitive(x) && k !== 'load_result');
                 let html = title ? `<div class="group">${esc(title)}</div>` : '';
                 if (prims.length) {
-                    html += `<div class="scroll"><table><tbody>${prims.map(([k, x]) =>
-                        `<tr><th>${esc(k)}</th><td class="num">${fmt(x)}</td></tr>`).join('')}</tbody></table></div>`;
+                    html += `<div class="scroll"><table><tbody>${prims.map(([k, x]) => {
+                        const displayName = LABELS[k] || esc(k);
+                        return `<tr><th>${displayName}</th><td class="num">${fmt(x)}</td></tr>`;
+                    }).join('')}</tbody></table></div>`;
                 }
 
                 if (v.load_result) {
