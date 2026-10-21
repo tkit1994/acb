@@ -3,7 +3,8 @@ members = [
     "acb_core",
     "wasm_wrapper",
     "mex_wrapper",
+    "python_wrapper"
 ]
-default-members = ["acb_core", "wasm_wrapper"]
+default-members = ["acb_core", "wasm_wrapper", "python_wrapper"]
 
 resolver = "3"
