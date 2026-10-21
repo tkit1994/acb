@@ -357,6 +357,8 @@ mod tests {
         let (x, y) = calc_xa_ya(alpha, fa, fr)?;
         assert_approx_eq!(x, 1.89, eps);
         assert_approx_eq!(y, 0.55, eps);
+        let alpha = 44.9f64.to_radians();
+        assert!(calc_xa_ya(alpha, fa, fr).is_err());
         Ok(())
     }
     #[test]
