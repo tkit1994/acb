@@ -1,11 +1,11 @@
 use std::f64::consts::PI;
 
+use anyhow::Ok;
 use roots::{SimpleConvergency, find_root_brent};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    common::{hertz_coefficients, jra},
-    iso::{f0, fca, fcr},
+    common::{hertz_coefficients, j12, jra}, iso::{f0, fca, fcr},
 };
 
 // 计算输入
@@ -263,7 +263,63 @@ pub fn calc_xa_ya(alpha: f64, fa: f64, fr: f64) -> anyhow::Result<(f64, f64)> {
         Ok((term * alpha.tan() * 2.0, term))
     }
 }
+pub fn calc_qci(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
+    let fi = acb_input.fi;
+    let dw = acb_input.dw;
+    let dm = acb_input.dpw;
+    let alpha = acb_input.alpha;
+    let z = acb_input.z as f64;
+    let gamma = dw * alpha.cos() / dm;
+    let term1 = (2.0 * fi) / (2.0 * fi - 1.0);
+    let term1 = term1.powf(0.41);
+    let term2 = (1.0 - gamma).powf(1.39) / (1.0 + gamma).powf(1.0 / 3.0);
+    let term3: f64 = gamma / alpha.cos();
+    let term3 = term3.powf(0.3);
+    let coef = match coefficient {
+        Some(value) => value,
+        None => 98.1,
+    };
+    let eta = 1.0 - 1.0/3.0 * alpha.sin();
+    coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
+}
 
+pub fn calc_qce(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
+    let fe = acb_input.fe;
+    let dw = acb_input.dw;
+    let dm = acb_input.dpw;
+    let alpha = acb_input.alpha;
+    let z = acb_input.z as f64;
+    let gamma = dw * alpha.cos() / dm;
+    let term1 = (2.0 * fe) / (2.0 * fe - 1.0);
+    let term1 = term1.powf(0.41);
+    let term2 = (1.0 + gamma).powf(1.39) / (1.0 - gamma).powf(1.0 / 3.0);
+    let term3: f64 = gamma / alpha.cos();
+    let term3 = term3.powf(0.3);
+    let coef = match coefficient {
+        Some(value) => value,
+        None => 98.1,
+    };
+    let eta = 1.0 - 1.0/3.0 * alpha.sin();
+    coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
+}
+pub fn calc_life_lp(acb_input: ACBInput, coefficient: Option<f64>) -> anyhow::Result<f64> {
+    let fr = acb_input.fr;
+    let fa = acb_input.fa;
+    let alpha = acb_input.alpha;
+    let z = acb_input.z as f64;
+    let epsilon = calc_epsilon(fr, fa, alpha)?;
+    let qmax = calc_q_max(epsilon, z, alpha, fr)?;
+    let j1 = j12(epsilon, 4.5, 3.0)?;
+    let j2 = j12(epsilon, 5.0, 10.0 / 3.0)?;
+    let qci = calc_qci(acb_input, coefficient);
+    let qei = qmax * j1;
+    let li = (qci / qei).powf(3.0);
+    let qce = calc_qce(acb_input, coefficient);
+    let qee = qmax * j2;
+    let le = (qce / qee).powf(3.0);
+    let l = (li.powf(-10.0/9.0) + le.powf(-10.0/9.0)).powf(-9.0 / 10.0);
+    Ok(l)
+}
 #[cfg(test)]
 mod tests {
 
@@ -411,6 +467,60 @@ mod tests {
             let (xr, yr) = calc_xa_ya(deg2rad(alpha as f64), fr, fa)?;
             println!("{}\t{:.2}\t{:.2}", alpha, xr, yr);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_qci() -> anyhow::Result<()> {
+        let acb_input = ACBInput {
+            dw: 22.23,
+            dpw: 125.3,
+            z: 16,
+            alpha: deg2rad(41.6),
+            fr: 1.0,
+            fa: 17800.0,
+            fi: 0.5232,
+            fe: 0.5232,
+            bm: 1.0,
+        };
+        let qci = calc_qci(acb_input, Some(93.2));
+        assert_approx_eq!(qci, 12900.0, 0.1);
+        Ok(())
+    }
+    #[test]
+    fn test_qce() -> anyhow::Result<()> {
+        let acb_input = ACBInput {
+            dw: 22.23,
+            dpw: 125.3,
+            z: 16,
+            alpha: deg2rad(41.6),
+            fr: 1.0,
+            fa: 17800.0,
+            fi: 0.5232,
+            fe: 0.5232,
+            bm: 1.0,
+        };
+        let qce = calc_qce(acb_input, Some(93.2));
+        assert_approx_eq!(qce, 20400.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_life_lp() -> anyhow::Result<()>{
+        
+        let acb_input = ACBInput {
+            dw: 22.23,
+            dpw: 125.3,
+            z: 16,
+            alpha: deg2rad(41.6),
+            fr: 1.0,
+            fa: 17800.0,
+            fi: 0.5232,
+            fe: 0.5232,
+            bm: 1.0,
+        };
+        let life_lp = calc_life_lp(acb_input, Some(93.2))?;
+        assert_approx_eq!(life_lp, 1814.0, 1.0);
         Ok(())
     }
 }
