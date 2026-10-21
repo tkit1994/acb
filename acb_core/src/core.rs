@@ -19,6 +19,7 @@ pub struct ACBInput {
     pub fa: f64,
     pub fi: f64,
     pub fe: f64,
+    pub bm: f64,
 }
 
 // 计算输出结果
@@ -29,6 +30,9 @@ pub struct ACBOut {
     pub ca: f64,
     pub c0a: f64,
     pub load_result: LoadResult,
+    pub p0r: f64,
+    pub p0a: f64,
+    pub s0: f64
 }
 
 // 载荷输出结果
@@ -170,7 +174,8 @@ pub fn calc_cr(acb_input: ACBInput) -> anyhow::Result<f64> {
     } else {
         3.647 * fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.4)
     };
-    Ok(cr)
+    let bm = acb_input.bm;
+    Ok(bm * cr)
 }
 
 pub fn calc_ca(acb_input: ACBInput) -> anyhow::Result<f64> {
@@ -189,7 +194,8 @@ pub fn calc_ca(acb_input: ACBInput) -> anyhow::Result<f64> {
     } else {
         3.647 * fc * alpha.cos().powf(0.7) * z.powf(2.0 / 3.0) * dw.powf(1.4) * alpha.tan()
     };
-    Ok(ca)
+    let bm = acb_input.bm;
+    Ok(bm * ca)
 }
 
 pub fn calc_c0r(acb_input: ACBInput) -> anyhow::Result<f64> {
@@ -222,6 +228,25 @@ pub fn calc_c0a(acb_input: ACBInput) -> anyhow::Result<f64> {
     let f0 = f0(coefficient, gamma, fi, fe, sigma_max)?;
     let c0r = f0 * z * dw.powf(2.0) * alpha.sin();
     Ok(c0r)
+}
+
+pub fn calc_p0r(acb_input: ACBInput) -> anyhow::Result<f64> {
+    let fr = acb_input.fr;
+    let fa = acb_input.fa;
+    let alpha = acb_input.alpha;
+    let epsilon = calc_epsilon(fr, fa, alpha)?;
+    let (jr, _) = jra(epsilon, 1.5)?;
+    let (jr_05, _) = jra(0.5, 1.5)?;
+    Ok(fr * jr_05 / jr)
+}
+
+pub fn calc_p0a(acb_input: ACBInput) -> anyhow::Result<f64> {
+    let fr = acb_input.fr;
+    let fa = acb_input.fa;
+    let alpha = acb_input.alpha;
+    let epsilon = calc_epsilon(fr, fa, alpha)?;
+    let (_, ja) = jra(epsilon, 1.5)?;
+    Ok(fa / ja)
 }
 #[cfg(test)]
 mod tests {
@@ -313,9 +338,29 @@ mod tests {
             fa: 17800.0,
             fi: 11.6 / 22.23,
             fe: 11.6 / 22.23,
+            bm: 1.0
         };
         let res = calc_dist_all(acb_input)?;
         println!("{:#.4?}", res);
+        Ok(())
+    }
+    #[test]
+    #[ignore = "No test data"]
+    fn test_p0()-> anyhow::Result<()> {
+        let acb_input = ACBInput {
+            dw: 22.23,
+            dpw: 125.3,
+            z: 16,
+            alpha: deg2rad(40.0),
+            fr: 17800.0,
+            fa: 17800.0,
+            fi: 11.6 / 22.23,
+            fe: 11.6 / 22.23,
+            bm: 1.0
+        };
+        let p0r = calc_p0r(acb_input)?;
+        let p0a = calc_p0a(acb_input)?;
+        println!("P0r:{}\tP0a:{}", p0r, p0a);
         Ok(())
     }
 }
