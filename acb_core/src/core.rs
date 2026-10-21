@@ -279,7 +279,8 @@ pub fn calc_qci(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
     let term3 = term3.powf(0.3);
     let coef = coefficient.unwrap_or(98.1);
     let eta = 1.0 - 1.0 / 3.0 * alpha.sin();
-    coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
+    let bm = acb_input.bm;
+    bm * coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
 }
 
 pub fn calc_qce(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
@@ -296,7 +297,8 @@ pub fn calc_qce(acb_input: ACBInput, coefficient: Option<f64>) -> f64 {
     let term3 = term3.powf(0.3);
     let coef = coefficient.unwrap_or(98.1);
     let eta = 1.0 - 1.0 / 3.0 * alpha.sin();
-    coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
+    let bm = acb_input.bm;
+    bm * coef * term1 * term2 * term3 * dw.powf(1.8) * z.powf(-1.0 / 3.0) * eta
 }
 pub fn calc_life_lp(acb_input: ACBInput, coefficient: Option<f64>) -> anyhow::Result<f64> {
     let fr = acb_input.fr;
