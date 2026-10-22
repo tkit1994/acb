@@ -5,3 +5,6 @@ pkg
 !.gitkeep
 .venv
 *.pyi
+*.zip
+*.tar
+*.gz
